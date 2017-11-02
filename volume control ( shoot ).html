@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>volume control</title>
+		<meta charset="utf-8">
+		<script src="http://cdn.static.runoob.com/libs/jquery/1.10.2/jquery.min.js"></script>
+		<style type="text/css">
+			.volumeWrapper{
+				font-size: 20px;
+				margin: 100px 150px;
+				position: relative;
+			}
+			.volumeBox, .lineBox, .ball{ display: inline-block; }
+			.volumeBox, .colorCover, img{ position: absolute; }
+			.volumeBox{
+				top: 0.1em; left: 0.1em;
+				cursor: pointer;
+				background-color: #ddd;
+				width: 3em;
+				height: 3em;
+				overflow: hidden;
+			}
+			.volumeBoxActive{ -webkit-transform: rotate(-45deg); }
+			.colorCover{
+				top: 0; left: 0;
+				width: 2.8em;
+				height: 2.8em;
+				border-radius: 40%;
+				background-color: #000;
+				-webkit-transform: translateX(-4.8rem);
+			}
+			img{
+				cursor: pointer;
+				width: 3.2em;
+				top: 0; left: 0;
+			}
+			.lineBox{
+				position: absolute;
+				top: 2em; left: 3.4em;
+			}
+			.lineBox div{
+				position: absolute;
+				top: 0; left: 0;
+			}
+			.lineCover{
+				border: 1px solid #000;
+				border-width: 0; 
+				width: 0;
+			}
+			.ball{
+				width: 0.5em;
+				height: 0.5em;
+				border-radius: 50%;
+				background-color: #000;
+				position: absolute;
+				top: 0.5em; left: 2.5em;
+				opacity: 0;
+			}
+			.ballActive{ opacity: 1; }
+			.ballZero{ background-color: #ddd; }
+			.ballhover{ background-color: #aaa; }
+		</style>
+	</head>
+	<body>
+		<div class="volumeWrapper">
+			<div class="volumeBox">
+				<div class="colorCover"></div>
+			</div>
+			<img src="./mask.png">
+			<div class="lineBox">
+				<div class="lineCover"></div>
+			</div>
+			<div class="ball"></div>
+		</div>
+		<script type="text/javascript">
+			var volumeBox = $(".volumeBox")
+			var img = $("img")
+			var ball =$(".ball")
+			var line = $(".lineCover")
+			var cover = $(".colorCover")
+			var startTime, endTime
+			var chargeInterval, shootInterval
+			var lock = false
+			var force = x = 0
+			img.mouseenter(function(){
+				volumeBox.css("background-color", "#aaa")
+				if (x == 0) { ball.addClass("ballhover") }
+			})
+			img.mouseleave(function(){
+				if (x == 0) {
+					volumeBox.css("background-color", "#ddd")
+					ball.removeClass("ballhover").addClass("ballZero")
+				}
+			})
+			img.mousedown(function(){
+				startTime = new Date().getTime()
+				charge()
+			})
+			img.mouseup(function(){
+				endTime = new Date().getTime()
+				if (endTime - startTime < 400) {
+					// 点击静音
+					init()
+					force = x = 0
+					ball.addClass("ballActive ballhover").css("transform", "translate(1.2em, 1em)")
+					cover.css("transform", "translateX(-4.8em)")
+				} else if (!lock && force > 0) {
+					clearInterval(chargeInterval)
+					shootBall()
+				}
+				volumeBox.removeClass('volumeBoxActive')
+				img.removeClass('volumeBoxActive')
+			})
+			function charge(){
+				// 初始化
+				init()
+				// 开始
+				volumeBox.addClass('volumeBoxActive')
+				img.addClass('volumeBoxActive')
+				chargeInterval = setInterval(function(){
+					force += 0.2
+					if (force-3 <= 0) {
+						cover.css("transform", "translateX(" + (force-3) + "em)")
+					}else{
+						clearInterval(chargeInterval)
+						lock = true
+						shootBall()
+					}
+				}, 80)
+			}
+			function shootBall(){
+				$(".ball").addClass("ballActive")
+				line.css("border-width", "1px")
+				var y = t = 0
+				x = 0
+				if (force < 1) { force = 1 }
+				shootInterval = setInterval(function(){
+					if (x < 5) { t += 1.4 } else { t += 0.4 }
+					if (force < 2) {
+						x += force - 0.24*t
+						y += -0.8*force + 0.6*t
+					}else{
+						x += 0.9*force - 0.24*t
+						y += -0.7*force + 0.6*t
+					}
+					if (y > 1) {
+						// 结束
+						ball.css("transform", "translate(" + 0.5*x + "em, 1em)")
+						line.css("width", 0.5*(x-1.2) + "em")
+						clearInterval(shootInterval)
+						lock = false
+						force = 0
+					} else {
+						ball.css("transform", "translate(" + 0.5*x + "em, " + y + "em)")
+						line.css("width", 0.5*(x-1.2) + "em")
+					}
+				}, 20)
+			}
+			function init(){
+				clearInterval(chargeInterval)
+				clearInterval(shootInterval)
+				ball.removeClass("ballActive ballhover ballZero").css("transform", "translate(0, 0)")
+				line.css({"border-width": "0", "width": "0"})
+			}
+		</script>
+	</body>
+</html>
